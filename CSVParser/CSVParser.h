@@ -83,6 +83,16 @@ public:
     std::streamoff rowPos;
 private:
 
+    void readFile() {
+        if (!file->eof()) {
+            value = read();
+            rowPos = (*file).tellg();
+        }
+        if (file->eof()) {
+            file = nullptr;
+            rowPos = -1;
+        }
+    };
 
     template <typename... Args> struct typesList{};
 
@@ -99,10 +109,9 @@ private:
                 throw std::invalid_argument("File ended too early.");
             }
 
+
             std::string data = getData();
-            if (data == "\0") {
-                exit(0);
-            }
+
             std::istringstream column(data);
             Head elem;
             column >> elem;
@@ -174,14 +183,7 @@ public:
         if (file == nullptr) {
             return *this;
         }
-        if (!file->eof()) {
-            value = read();
-            rowPos = (*file).tellg();
-        }
-        if (file->eof()) {
-            file = nullptr;
-            rowPos = -1;
-        }
+        readFile();
         return *this;
     }
 
@@ -194,14 +196,7 @@ public:
                 std::string buffer;
                 std::getline(*file, buffer, splitRow);
             }
-            if (!file->eof()) {
-                value = read();
-                rowPos = (*file).tellg();
-            }
-            if (file->eof()) {
-                file = nullptr;
-                rowPos = -1;
-            }
+            readFile();
             return *this;
         }
         catch (const std::exception &e) {

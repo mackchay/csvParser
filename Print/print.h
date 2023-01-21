@@ -19,7 +19,7 @@ auto &print_tuple(Tuple &tup, int_<pos>, Stream &os) {
 
 template<class Ch, class Tr, class... Args>
 auto &operator<<(std::basic_ostream<Ch, Tr>& os,
-                std::tuple<Args...> &tup) {
+                std::tuple<Args...> tup) {
     return print_tuple(tup, int_<sizeof...(Args)>(), os);
 }
 
