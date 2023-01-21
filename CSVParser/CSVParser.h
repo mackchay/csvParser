@@ -45,7 +45,7 @@ public:
             }
         }
         catch (const std::exception &e) {
-            e.what();
+            std::cout << e.what();
             exit(1);
         }
     }
@@ -95,16 +95,17 @@ private:
     template<typename ...Arg, typename Head, typename ...Args>
     std::tuple<Types...> makeTuple(typesList<Head, Args...>, Arg... arg) {
         try {
-            if (file->eof()) {
-                throw std::invalid_argument("File ended too early.");
-            }
+//            if (file->eof()) {
+//                throw std::invalid_argument("File ended too early.");
+//            }
 
             std::istringstream column(getData());
             Head elem;
+            column >> elem;
+
             if (column.fail()) {
                 throw std::istringstream::failure("Fail column.");
             }
-            column >> elem;
 
             return makeTuple(typesList<Args...>(), arg..., elem);
         }
@@ -124,6 +125,7 @@ private:
         while (file && !(*file).eof() && (*file).get(sym) && sym != splitColumn && sym != splitRow) {
             row += sym;
         }
+
         return row;
     }
 
@@ -132,11 +134,15 @@ private:
     Iterator(std::ifstream *file, std::streamoff rowPos, char splitColumn, char splitRow) : file(file),
     rowPos(rowPos), splitColumn(splitColumn), splitRow(splitRow) {
         if (file) {
-            if (file->eof())
+            if (file->eof()) {
                 this->file = nullptr;
-            else
+                this->rowPos = -1;
+            }
+            else {
                 value = read();
+            }
         }
+
     };
 
 public:
@@ -164,8 +170,10 @@ public:
         if (file == nullptr) {
             return *this;
         }
-        value = read();
-        rowPos = (*file).tellg();
+        if (!file->eof()) {
+            value = read();
+            rowPos = (*file).tellg();
+        }
         if (file->eof()) {
             file = nullptr;
             rowPos = -1;
@@ -173,6 +181,30 @@ public:
         return *this;
     }
 
+    Iterator &operator+=(int lines) {
+        try {
+            for (size_t i = 0; i < lines - 1; i++) {
+                if (file->eof()) {
+                    throw std::invalid_argument ("Iterator out of range.");
+                }
+                std::string buffer;
+                std::getline(*file, buffer, splitRow);
+            }
+            if (!file->eof()) {
+                value = read();
+                rowPos = (*file).tellg();
+            }
+            if (file->eof()) {
+                file = nullptr;
+                rowPos = -1;
+            }
+            return *this;
+        }
+        catch (const std::exception &e) {
+            std::cout << e.what();
+            exit(1);
+        }
+    }
 };
 
 #endif //CSVPARSER_CSVPARSER_H
