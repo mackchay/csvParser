@@ -95,11 +95,15 @@ private:
     template<typename ...Arg, typename Head, typename ...Args>
     std::tuple<Types...> makeTuple(typesList<Head, Args...>, Arg... arg) {
         try {
-//            if (file->eof()) {
-//                throw std::invalid_argument("File ended too early.");
-//            }
+            if (file->eof()) {
+                throw std::invalid_argument("File ended too early.");
+            }
 
-            std::istringstream column(getData());
+            std::string data = getData();
+            if (data == "\0") {
+                exit(0);
+            }
+            std::istringstream column(data);
             Head elem;
             column >> elem;
 
